@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@drawable/webview_rounded"
+        android:clipToOutline="true"
+        android:outlineProvider="background" />
+
+    <com.mrdoob.browser.DragInterceptLinearLayout
+        android:id="@+id/chromeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="?attr/colorSurface"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="8dp"
+            android:paddingTop="14dp"
+            android:paddingBottom="14dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <ImageButton
+                android:id="@+id/panelReload"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="14dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_refresh"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Reload" />
+
+            <LinearLayout
+                android:id="@+id/urlBubble"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/url_bar_bubble"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="8dp">
+
+                <EditText
+                    android:id="@+id/urlBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:padding="0dp"
+                    android:gravity="center"
+                    android:hint="@string/url_hint"
+                    android:inputType="textUri"
+                    android:imeOptions="actionGo"
+                    android:singleLine="true"
+                    android:textSize="15sp"
+                    android:importantForAutofill="no" />
+
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/threeLogoButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_marginEnd="6dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+                <ImageView
+                    android:id="@+id/threeLogo"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/three_logo"
+                    android:alpha="0.3"
+                    android:contentDescription="three.js detection status" />
+
+                <TextView
+                    android:id="@+id/revisionBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|center_horizontal"
+                    android:layout_marginBottom="-5dp"
+                    android:background="@drawable/revision_badge_bg"
+                    android:paddingHorizontal="2dp"
+                    android:paddingVertical="0dp"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorOnPrimary"
+                    android:includeFontPadding="false"
+                    android:visibility="invisible" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+    </com.mrdoob.browser.DragInterceptLinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomPanel"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:background="?attr/colorSurface">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tabConsole"
+                style="@style/PanelTab"
+                android:text="Console"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/tabSource"
+                style="@style/PanelTab"
+                android:text="Source"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:id="@+id/tabNetwork"
+                style="@style/PanelTab"
+                android:text="Network"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <TextView
+                android:id="@+id/tabThreejs"
+                style="@style/PanelTab"
+                android:text="Three.js"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <WebView
+                android:id="@+id/panelView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/panel_view_rounded"
+                android:clipToOutline="true"
+                android:outlineProvider="background" />
+
+            <WebView
+                android:id="@+id/threePanelView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/panel_view_rounded"
+                android:clipToOutline="true"
+                android:outlineProvider="background"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>frame.js / player</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			html {
+				background: #000;
+				height: 100%;
+			}
+			body {
+				height: 100%;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#container {
+				height: 100%;
+			}
+
+			#controls {
+				position: fixed;
+				top: 20px;
+				left: 20px;
+			}
+				#controls button {
+					width: 60px;
+					height: 40px;
+					padding: 10px 20px;
+					background: #007bff;
+					color: white;
+					border: none;
+					border-radius: 5px;
+					cursor: pointer;
+				}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<div id="controls">
+			<button id="playButton">▶</button>
+		</div>
+
+		<script type="module">
+
+			import { Frame } from './Frame.js';
+
+			const frame = new Frame();
+			container.appendChild( frame.domElement );
+
+			// Play button
+
+			const playButton = document.getElementById( 'playButton' );
+			playButton.addEventListener( 'click', function() {
+
+				if ( frame.player.isPlaying === false ) {
+
+					playButton.textContent = '⏸';
+					frame.player.play();
+
+				} else {
+
+					playButton.textContent = '▶';
+					frame.player.pause();
+
+				}
+
+			} );
+
+			// Load file from URL
+
+			const query = window.location.search;
+
+			if ( query.substr( 1, 5 ) === 'file=' ) {
+				load( query.substr( 6 ) );
+			}
+
+			//
+
+			async function load( path ) {
+
+				const response = await fetch( path );
+
+				frame.fromMarkdown( await response.text() );
+
+				await frame.compile();
+
+				requestAnimationFrame( animate );
+
+			}
+
+			let prevTime = 0;
+
+			function animate( time ) {
+
+				requestAnimationFrame( animate );
+
+				frame.player.tick( time - prevTime );
+				frame.timeline.update( frame.player.currentTime );
+
+				prevTime = time;
+
+			}
+
+		</script>
+	</body>
+</html>

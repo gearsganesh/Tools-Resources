@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>frame.js</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="manifest" href="manifest.json">
+	</head>
+	<body ontouchstart="">
+		<link href="./css/main.css" rel="stylesheet" />
+		<link id="theme" href="./css/dark.css" rel="stylesheet" />
+
+		<link rel="stylesheet" href="./js/libs/codemirror/codemirror.css">
+		<link rel="stylesheet" href="./js/libs/codemirror/theme/monokai.css">
+		<script src="./js/libs/codemirror/codemirror.js"></script>
+		<script src="./js/libs/codemirror/mode/javascript.js"></script>
+
+		<link rel="stylesheet" href="./js/libs/codemirror/addon/dialog/dialog.css">
+		<link rel="stylesheet" href="./js/libs/codemirror/addon/search/matchesonscrollbar.css">
+		<script src="./js/libs/codemirror/addon/dialog/dialog.js"></script>
+		<script src="./js/libs/codemirror/addon/search/searchcursor.js"></script>
+		<script src="./js/libs/codemirror/addon/search/search.js"></script>
+		<script src="./js/libs/codemirror/addon/scroll/annotatescrollbar.js"></script>
+		<script src="./js/libs/codemirror/addon/search/matchesonscrollbar.js"></script>
+		<script src="./js/libs/codemirror/addon/search/jump-to-line.js"></script>
+
+		<script src="./js/libs/signals.min.js"></script>
+
+		<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.9.6/dist/ffmpeg.min.js" defer></script>
+
+		<script type="module">
+
+			import { Editor } from './js/Editor.js';
+			import { Viewport } from './js/Viewport.js';
+			import { Code } from './js/Code.js';
+			import { Sidebar } from './js/Sidebar.js';
+			import { Controls } from './js/Controls.js';
+			import { Timeline } from './js/Timeline.js';
+			import { Menubar } from './js/Menubar.js';
+
+			var editor = new Editor();
+
+			window.editor = editor; // Expose editor to Console
+
+			var viewport = new Viewport( editor );
+			document.body.appendChild( viewport.dom );
+
+			var code = new Code( editor );
+			document.body.appendChild( code.dom );
+
+			var sidebar = new Sidebar( editor );
+			document.body.appendChild( sidebar.dom );
+
+			var controls = new Controls( editor );
+			document.body.appendChild( controls.dom );
+
+			var timeline = new Timeline( editor );
+			document.body.appendChild( timeline.dom );
+
+			var menubar = new Menubar( editor );
+			document.body.appendChild( menubar.dom );
+
+			// LocalStorage
+
+			editor.signals.nameChanged.add( saveState );
+			editor.signals.durationChanged.add( saveState );
+			editor.signals.animationAdded.add( saveState );
+			editor.signals.animationModified.add( saveState );
+			editor.signals.animationRemoved.add( saveState );
+			editor.signals.animationRenamed.add( saveState );
+			editor.signals.effectCompiled.add( saveState );
+			editor.signals.effectRenamed.add( saveState );
+			editor.signals.scriptChanged.add( saveState );
+			editor.signals.scriptRemoved.add( saveState );
+			editor.signals.scriptRenamed.add( saveState );
+			editor.signals.editorCleared.add( saveState );
+
+			var timeout;
+
+			function saveState() {
+
+				clearTimeout( timeout );
+
+				timeout = setTimeout( function () {
+
+					editor.config.setKey( 'state', editor.toMarkdown() );
+
+				}, 1000 );
+
+			}
+
+			// State
+
+			const hashTime = parseFloat( location.hash.substring( 1 ) );
+
+			if ( isNaN( hashTime ) === false ) {
+
+				editor.setTime( hashTime );
+
+			}
+
+			const state = editor.config.getKey( 'state' );
+
+			if ( state !== undefined ) {
+
+				editor.fromMarkdown( state );
+
+			}
+
+			const player = editor.frame.player;
+			const signals = editor.signals;
+
+			// Short-cuts
+
+			document.addEventListener( 'keydown', function ( event ) {
+
+				if ( event.metaKey || event.ctrlKey ) {
+
+					switch ( event.keyCode ) {
+						case 83: // prevent CMD + S
+							event.preventDefault();
+							break;
+						case 69: // CMD + E to export
+							event.preventDefault();
+							signals.exportState.dispatch();
+							break;
+					}
+
+					return;
+
+				}
+
+				switch ( event.keyCode ) {
+
+					case 8: // prevent browser back
+						event.preventDefault();
+						break;
+					case 32: // space
+						player.isPlaying ? editor.stop() : editor.play();
+						break;
+					case 37: // left
+						event.preventDefault();
+						signals.timeBackward.dispatch();
+						break;
+					case 39: // right
+						event.preventDefault();
+						signals.timeForward.dispatch();
+						break;
+					case 38: // up
+						event.preventDefault();
+						player.playbackRate += 0.1;
+						signals.playbackRateChanged.dispatch();
+						break;
+					case 40: // down
+						event.preventDefault();
+						player.playbackRate -= 0.1;
+						player.playbackRate = Math.max( 0, player.playbackRate );
+						signals.playbackRateChanged.dispatch();
+						break;
+					case 189: // -
+						event.preventDefault();
+						signals.timelineZoomOut.dispatch();
+						break;
+					case 187: // +
+						event.preventDefault();
+						signals.timelineZoomIn.dispatch();
+						break;
+					case 83:
+						break;
+
+				}
+
+			} );
+
+			// Drop
+
+			document.addEventListener( 'dragover', function ( event ) {
+
+				event.preventDefault();
+				event.dataTransfer.dropEffect = 'copy';
+
+			}, false );
+
+			document.addEventListener( 'drop', function ( event ) {
+
+				event.preventDefault();
+
+				if ( event.dataTransfer.files.length > 0 ) {
+
+					const file = event.dataTransfer.files[ 0 ];
+
+					const reader = new FileReader();
+					reader.addEventListener( 'load', async function ( event ) {
+
+						if ( confirm( 'Any unsaved data will be lost. Are you sure?' ) ) {
+
+							editor.clear();
+
+							if ( file.name.endsWith( '.md' ) ) {
+
+								await editor.fromMarkdown( event.target.result );
+
+							} else {
+
+								await editor.fromJSON( JSON.parse( event.target.result ) );
+
+							}
+
+							editor.setTime( 0 );
+
+						}
+
+					}, false );
+					reader.readAsText( file );
+
+				}
+
+			}, false );
+
+			//
+
+			window.addEventListener( 'resize', function () {
+
+				signals.windowResized.dispatch();
+
+			} );
+
+			signals.windowResized.dispatch();
+
+		</script>
+	</body>
+</html>
